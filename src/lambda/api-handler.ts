@@ -15,37 +15,37 @@ import utc from "dayjs/plugin/utc";
 import advancedFormat from "dayjs/plugin/advancedFormat";
 import { orderBy } from "lodash-es";
 
-dayjs.extend(utc)
-dayjs.extend(advancedFormat)
+dayjs.extend(utc);
+dayjs.extend(advancedFormat);
 
-const nanoSecondFormat = "YYYY-MM-DDTHH:mm:ss.SSSSSSSSS[Z]"
+const nanoSecondFormat = "YYYY-MM-DDTHH:mm:ss.SSSSSSSSS[Z]";
 
-const messagesTableName = "messages"
+const messagesTableName = "messages";
 
 const ddbDocClient = DynamoDBDocumentClient.from(
   new DynamoDBClient({
     region: "ap-northeast-1",
   })
-)
+);
 
 const lineBotClient = new Client({
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN ?? "",
   channelSecret: process.env.CHANNEL_SECRET ?? "",
-})
+});
 
 const openAiApi = new OpenAIApi(
   new Configuration({
     apiKey: process.env.OPEN_AI_SECRET ?? "",
   })
-)
+);
 
 const handleEvent = async (event: WebhookEvent) => {
   if (event.type !== "message" || event.message.type !== "text") {
-    return null
+    return null;
   }
 
-  const userId = event.source.userId!
-  const userMessageContent = event.message.text
+  const userId = event.source.userId!;
+  const userMessageContent = event.message.text;
   // ユーザの発言履歴を保存する
   await ddbDocClient.send(
     new PutCommand({
@@ -58,7 +58,7 @@ const handleEvent = async (event: WebhookEvent) => {
         role: "user",
       },
     })
-  )
+  );
 
   // 会話中ユーザのこれまでの発言履歴を取得する
   const { Items: messages = [] } = await ddbDocClient.send(
@@ -73,7 +73,7 @@ const handleEvent = async (event: WebhookEvent) => {
         ":userId": userId,
       },
     })
-  )
+  );
 
   // 時系列順にソートする
   const queriedMessages: ChatCompletionRequestMessage[] = orderBy(
@@ -86,7 +86,7 @@ const handleEvent = async (event: WebhookEvent) => {
         role: message.role,
         content: message.content,
       } as ChatCompletionRequestMessage)
-  )
+  );
 
   // ユーザとChatGPTの会話履歴をChatGPT APIに投げ、返答を得る
   const completion = await openAiApi.createChatCompletion({
@@ -111,9 +111,9 @@ const handleEvent = async (event: WebhookEvent) => {
           "敬語を使うのをやめてください。また、絵文字をたくさん使って話してください。",
       },
     ].concat(queriedMessages) as ChatCompletionRequestMessage[],
-  })
+  });
 
-  const chatGptMessageContent = completion.data.choices[0].message?.content!
+  const chatGptMessageContent = completion.data.choices[0].message?.content!;
   // ChatGPTの発言を保存する
   await ddbDocClient.send(
     new PutCommand({
@@ -126,36 +126,36 @@ const handleEvent = async (event: WebhookEvent) => {
         role: "assistant",
       },
     })
-  )
+  );
 
   // ChatGPTの発言をパラメータにLINE MessagingAPIを叩く
   const repliedMessage: TextMessage = {
     type: "text",
     text: chatGptMessageContent,
-  }
-  return lineBotClient.replyMessage(event.replyToken, repliedMessage)
-}
+  };
+  return lineBotClient.replyMessage(event.replyToken, repliedMessage);
+};
 
-const app = express()
+const app = express();
 app.use(
   // 署名検証+JSONパースのミドルウェア
   middleware({
     channelSecret: process.env.CHANNEL_SECRET ?? "",
   })
-)
+);
 
 app.post("/webhook", async (req, res) => {
   try {
-    const events: WebhookEvent[] = req.body.events
+    const events: WebhookEvent[] = req.body.events;
 
-    const results = await Promise.all(events.map(handleEvent))
-    return res.json(results)
+    const results = await Promise.all(events.map(handleEvent));
+    return res.json(results);
   } catch (err) {
-    console.error(err)
-    return res.status(500)
+    console.error(err);
+    return res.status(500);
   }
-})
+});
 
-export default app
+export default app;
 
-export const handler = serverlessExpress({ app })
+export const handler = serverlessExpress({ app });
