@@ -34,10 +34,11 @@ export class AwsOpenAiWithLineStack extends cdk.Stack {
         this,
         "lineMessagingApiChannelAccessToken"
       )
-    const openAiSecret = cdk.aws_ssm.StringParameter.valueForStringParameter(
-      this,
-      "openAiSecret"
-    )
+    const openAiSecret = 
+      cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        "openAiSecret"
+      )
 
     // APIGW Lambda関数
     const apiFn = new cdk.aws_lambda_nodejs.NodejsFunction(this, "apiFn", {

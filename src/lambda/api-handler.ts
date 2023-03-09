@@ -1,7 +1,11 @@
 import "source-map-support/register";
 import serverlessExpress from "@vendia/serverless-express";
 import express from "express";
-import { Client, middleware, TextMessage, WebhookEvent } from "@line/bot-sdk";
+import { 
+  Client, 
+  //middleware, JSONParseError, SignatureValidationFailed, 
+  TextMessage, WebhookEvent 
+} from "@line/bot-sdk";
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
@@ -136,18 +140,27 @@ const handleEvent = async (event: WebhookEvent) => {
   return lineBotClient.replyMessage(event.replyToken, repliedMessage);
 };
 
+const middleware = require('@line/bot-sdk').middleware
+const config = {
+  channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
+  channelSecret: process.env.CHANNEL_SECRET
+}
+
 const app = express();
-app.use(
+/*
+app.use("/webhook",
   // 署名検証+JSONパースのミドルウェア
   middleware({
-    channelSecret: process.env.CHANNEL_SECRET ?? "",
+    config
+    //channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
+    //channelSecret: process.env.CHANNEL_SECRET ?? "",
   })
 );
+*/
 
-app.post("/webhook", async (req, res) => {
+app.post("/webhook",middleware(config), async(req, res) => {
   try {
     const events: WebhookEvent[] = req.body.events;
-
     const results = await Promise.all(events.map(handleEvent));
     return res.json(results);
   } catch (err) {
