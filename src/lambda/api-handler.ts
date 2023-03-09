@@ -1,21 +1,19 @@
-import "source-map-support/register"
-import "lodash"
-import "moment"
-import serverlessExpress from "@vendia/serverless-express"
-import express from "express"
-import { Client, middleware, TextMessage, WebhookEvent } from "@line/bot-sdk"
-import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai"
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb"
+import "source-map-support/register";
+import serverlessExpress from "@vendia/serverless-express";
+import express from "express";
+import { Client, middleware, TextMessage, WebhookEvent } from "@line/bot-sdk";
+import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
   PutCommand,
   QueryCommand,
-} from "@aws-sdk/lib-dynamodb"
-import { v4 } from "uuid"
-import dayjs from "dayjs"
-import utc from "dayjs/plugin/utc"
-import advancedFormat from "dayjs/plugin/advancedFormat"
-import { orderBy } from "lodash-es"
+} from "@aws-sdk/lib-dynamodb";
+import { v4 } from "uuid";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import advancedFormat from "dayjs/plugin/advancedFormat";
+import { orderBy } from "lodash-es";
 
 dayjs.extend(utc)
 dayjs.extend(advancedFormat)
