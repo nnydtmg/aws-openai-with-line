@@ -42,7 +42,7 @@ export class AwsOpenAiWithLineStack extends cdk.Stack {
 
     // APIGW Lambda関数
     const apiFn = new cdk.aws_lambda_nodejs.NodejsFunction(this, "apiFn", {
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_22_X,
       entry: "src/lambda/api-handler.ts",
       environment: {
         // 環境変数にシークレットとAPIキーをセット
